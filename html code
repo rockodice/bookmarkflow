@@ -1,0 +1,14 @@
+<!-- Popup script -->
+
+<button id="bookmarkButton">Bookmark Tweet</button>
+
+<script>
+  var bookmarkButton = document.getElementById('bookmarkButton');
+  bookmarkButton.addEventListener('click', function() {
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, {action: 'bookmarkTweet'}, function(response) {
+        console.log(response.message);
+      });
+    });
+  });
+</script>
