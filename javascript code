@@ -1,0 +1,57 @@
+// Background script
+
+var Twitter = require('twitter');
+
+var client = new Twitter({
+  consumer_key: 'your-consumer-key',
+  consumer_secret: 'your-consumer-secret',
+  access_token_key: 'your-access-token-key',
+  access_token_secret: 'your-access-token-secret'
+});
+
+// Get bookmarked tweets
+function getBookmarkedTweets(callback) {
+  chrome.storage.local.get('bookmarkedTweets', function(result) {
+    var bookmarkedTweets = result.bookmarkedTweets;
+    if (bookmarkedTweets) {
+      callback(bookmarkedTweets);
+    } else {
+      console.error('No bookmarked tweets found');
+    }
+  });
+}
+
+// Display bookmarked tweets
+function displayBookmarkedTweets() {
+  getBookmarkedTweets(function(bookmarkedTweets) {
+    bookmarkedTweets.forEach(function(tweet) {
+      console.log('Bookmarked tweet: ' + tweet);
+    });
+  });
+}
+
+// Schedule display of bookmarked tweets
+function scheduleDisplayBookmarkedTweets() {
+  var randomInterval = Math.floor(Math.random() * 604800000) + 3600000; // 1 hour to 7 days
+  setTimeout(function() {
+    displayBookmarkedTweets();
+    scheduleDisplayBookmarkedTweets();
+  }, randomInterval);
+}
+
+// Start scheduling display of bookmarked tweets
+scheduleDisplayBookmarkedTweets();
+
+// Listen for messages from the popup script
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.action === 'bookmarkTweet') {
+    var tweet = request.tweet;
+    chrome.storage.local.get('bookmarkedTweets', function(result) {
+      var bookmarkedTweets = result.bookmarkedTweets || [];
+      bookmarkedTweets.push(tweet);
+      chrome.storage.local.set({bookmarkedTweets: bookmarkedTweets});
+      sendResponse({message: 'Tweet bookmarked'});
+    });
+    return true;
+  }
+});
